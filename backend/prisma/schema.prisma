@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId    String   @id
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leaderboardEntries LeaderboardEntry[]
+  gameSessions       GameSession[]
+
+  @@map("users")
+}
+
+model LeaderboardEntry {
+  entryId   Int      @id @default(autoincrement())
+  userId    String
+  username  String
+  score     Int
+  gameMode  String
+  timestamp BigInt
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([gameMode, score(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+  @@map("leaderboard_entries")
+}
+
+model GameSession {
+  sessionId String   @id
+  userId    String
+  username  String
+  gameMode  String
+  score     Int      @default(0)
+  isActive  Boolean  @default(true)
+  startedAt BigInt
+  endedAt   BigInt?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([isActive])
+  @@index([gameMode])
+  @@map("game_sessions")
+}

@@ -1,0 +1,646 @@
+openapi: 3.0.3
+info:
+  title: Snake Arena Interactive API
+  description: |
+    Backend API for Snake Arena Interactive - a multiplayer snake game with leaderboards and spectating features.
+    
+    This API supports:
+    - User authentication (signup, login, logout)
+    - Leaderboard management (view and submit scores)
+    - Live game spectating (view active sessions)
+  version: 1.0.0
+  contact:
+    name: Snake Arena Team
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+  - url: https://api.snake-arena.example.com/v1
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Leaderboard
+    description: Game scores and leaderboard operations
+  - name: Spectating
+    description: Live game spectating features
+
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: Create a new user account
+      description: Register a new user with username and password
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 20
+                  pattern: '^[a-zA-Z0-9_-]+$'
+                  description: Unique username (alphanumeric, underscore, and hyphen only)
+                  example: SnakeKing
+                password:
+                  type: string
+                  minLength: 6
+                  maxLength: 100
+                  format: password
+                  description: User password
+                  example: securePassword123
+      responses:
+        '201':
+          description: User account created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    description: JWT authentication token
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          description: Bad request (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error: Username must be between 3 and 20 characters
+        '409':
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error: Username already exists
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login to existing account
+      description: Authenticate user with username and password
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: User's username
+                  example: SnakeKing
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+                  example: securePassword123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    description: JWT authentication token
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error: Invalid username or password
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout current user
+      description: Invalidate the current user session
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user information
+      description: Retrieve the currently authenticated user's profile
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /leaderboard:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get leaderboard entries
+      description: Retrieve top scores, optionally filtered by game mode
+      operationId: getLeaderboard
+      parameters:
+        - name: gameMode
+          in: query
+          description: Filter by game mode
+          required: false
+          schema:
+            $ref: '#/components/schemas/GameMode'
+        - name: limit
+          in: query
+          description: Maximum number of entries to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Leaderboard entries retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaderboardEntry'
+              example:
+                - userId: user-1
+                  username: SnakeKing
+                  score: 2450
+                  gameMode: walls
+                  timestamp: 1701234567890
+                - userId: user-2
+                  username: CyberViper
+                  score: 2100
+                  gameMode: walls
+                  timestamp: 1701230967890
+
+  /leaderboard/submit:
+    post:
+      tags:
+        - Leaderboard
+      summary: Submit a game score
+      description: Submit a score to the leaderboard (requires authentication)
+      operationId: submitScore
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - score
+                - gameMode
+              properties:
+                score:
+                  type: integer
+                  minimum: 0
+                  description: Final game score
+                  example: 1250
+                gameMode:
+                  $ref: '#/components/schemas/GameMode'
+      responses:
+        '201':
+          description: Score submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  entry:
+                    $ref: '#/components/schemas/LeaderboardEntry'
+        '400':
+          description: Invalid score data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /sessions:
+    get:
+      tags:
+        - Spectating
+      summary: Get active game sessions
+      description: Retrieve list of currently active game sessions available for spectating
+      operationId: getActiveSessions
+      parameters:
+        - name: gameMode
+          in: query
+          description: Filter by game mode
+          required: false
+          schema:
+            $ref: '#/components/schemas/GameMode'
+      responses:
+        '200':
+          description: Active sessions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GameSession'
+              example:
+                - sessionId: session-abc123
+                  userId: user-2
+                  username: CyberViper
+                  gameMode: walls
+                  score: 1250
+                  isActive: true
+                  startedAt: 1701234567890
+                - sessionId: session-def456
+                  userId: user-3
+                  username: NeonCrawler
+                  gameMode: pass-through
+                  score: 890
+                  isActive: true
+                  startedAt: 1701234657890
+
+  /sessions/{sessionId}:
+    get:
+      tags:
+        - Spectating
+      summary: Get specific game session
+      description: Retrieve details of a specific game session for spectating
+      operationId: watchSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Unique session identifier
+          schema:
+            type: string
+            example: session-abc123
+      responses:
+        '200':
+          description: Session details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSession'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error: Session not found
+
+  /sessions/create:
+    post:
+      tags:
+        - Spectating
+      summary: Create a new game session
+      description: Create a new game session (requires authentication)
+      operationId: createSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - gameMode
+              properties:
+                gameMode:
+                  $ref: '#/components/schemas/GameMode'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  session:
+                    $ref: '#/components/schemas/GameSession'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /sessions/{sessionId}/end:
+    post:
+      tags:
+        - Spectating
+      summary: End a game session
+      description: Mark a game session as ended (requires authentication and ownership)
+      operationId: endSession
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Unique session identifier
+          schema:
+            type: string
+            example: session-abc123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - finalScore
+              properties:
+                finalScore:
+                  type: integer
+                  minimum: 0
+                  description: Final game score
+                  example: 1250
+      responses:
+        '200':
+          description: Session ended successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Session ended successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Not authorized to end this session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login or signup
+
+  schemas:
+    GameMode:
+      type: string
+      enum:
+        - walls
+        - pass-through
+      description: |
+        Game mode type:
+        - `walls`: Snake dies when hitting walls
+        - `pass-through`: Snake passes through walls to opposite side
+      example: walls
+
+    Direction:
+      type: string
+      enum:
+        - UP
+        - DOWN
+        - LEFT
+        - RIGHT
+      description: Snake movement direction
+      example: RIGHT
+
+    Position:
+      type: object
+      required:
+        - x
+        - y
+      properties:
+        x:
+          type: integer
+          minimum: 0
+          description: X coordinate on the grid
+          example: 10
+        y:
+          type: integer
+          minimum: 0
+          description: Y coordinate on the grid
+          example: 5
+
+    User:
+      type: object
+      required:
+        - userId
+        - username
+      properties:
+        userId:
+          type: string
+          description: Unique user identifier
+          example: user-1701234567890
+        username:
+          type: string
+          description: User's display name
+          example: SnakeKing
+
+    LeaderboardEntry:
+      type: object
+      required:
+        - userId
+        - username
+        - score
+        - gameMode
+        - timestamp
+      properties:
+        userId:
+          type: string
+          description: User identifier
+          example: user-1
+        username:
+          type: string
+          description: User's display name
+          example: SnakeKing
+        score:
+          type: integer
+          minimum: 0
+          description: Game score
+          example: 2450
+        gameMode:
+          $ref: '#/components/schemas/GameMode'
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix timestamp (milliseconds) when score was achieved
+          example: 1701234567890
+
+    GameSession:
+      type: object
+      required:
+        - sessionId
+        - userId
+        - username
+        - gameMode
+        - score
+        - isActive
+        - startedAt
+      properties:
+        sessionId:
+          type: string
+          description: Unique session identifier
+          example: session-abc123
+        userId:
+          type: string
+          description: User identifier
+          example: user-2
+        username:
+          type: string
+          description: Player's display name
+          example: CyberViper
+        gameMode:
+          $ref: '#/components/schemas/GameMode'
+        score:
+          type: integer
+          minimum: 0
+          description: Current game score
+          example: 1250
+        isActive:
+          type: boolean
+          description: Whether the session is currently active
+          example: true
+        startedAt:
+          type: integer
+          format: int64
+          description: Unix timestamp (milliseconds) when session started
+          example: 1701234567890
+
+    GameState:
+      type: object
+      required:
+        - snake
+        - food
+        - direction
+        - score
+        - isGameOver
+        - isPaused
+      properties:
+        snake:
+          type: array
+          items:
+            $ref: '#/components/schemas/Position'
+          description: Array of positions representing the snake (head first)
+          example:
+            - { x: 10, y: 10 }
+            - { x: 9, y: 10 }
+            - { x: 8, y: 10 }
+        food:
+          $ref: '#/components/schemas/Position'
+        direction:
+          $ref: '#/components/schemas/Direction'
+        score:
+          type: integer
+          minimum: 0
+          description: Current score
+          example: 150
+        isGameOver:
+          type: boolean
+          description: Whether the game has ended
+          example: false
+        isPaused:
+          type: boolean
+          description: Whether the game is paused
+          example: false
+
+    Error:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+          example: An error occurred
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error: Authentication required
