@@ -109,4 +109,29 @@ create the test file to test the apps
     # authenticate for codespaces
     gh auth refresh -h github.com -s codespace
     ```
-- Step 4:
+- Step 4: Create and Use Codespace
+```sh
+    # Create a new codespace
+    gh codespace create
+    # Note the ID that's generated (e.g., expert-doodle-wr7wg9p5gqcgggw)
+```
+- Step 5: Connect via SSH
+```sh
+gh codespace ssh -c expert-doodle-wr7wg9p5gqcgggw
+```
+- Step 6: get the SSH config
+```sh
+gh codespace ssh --config -c expert-doodle-wr7wg9p5gqcgggw
+```
+Add the output to `~/.ssh/config`
+
+- Step 7: Use with Antigravity
+    - Connect to codespace using Antigravity's SSH remote mode
+    - Open the project folder in `/workspaces/`
+
+- Step 8: Stop Codespace When Done
+```sh
+gh cs stop -c expert-doodle-wr7wg9p5gqcgggw
+```
+
+    
