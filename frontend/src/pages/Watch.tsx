@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { GameBoard } from '@/components/GameBoard';
-import { mockApi } from '@/services/mockApi';
+import { api } from '@/services/api';
 import { GameSession } from '@/types/game';
 import { SnakeGame, GRID_SIZE } from '@/lib/gameEngine';
 import { ArrowLeft, Eye } from 'lucide-react';
@@ -51,7 +51,7 @@ const Watch = () => {
   const loadActiveSessions = async () => {
     setIsLoading(true);
     try {
-      const sessions = await mockApi.getActiveSessions();
+      const sessions = await api.getActiveSessions();
       setActiveSessions(sessions);
     } finally {
       setIsLoading(false);
@@ -59,7 +59,7 @@ const Watch = () => {
   };
 
   const loadSession = async (id: string) => {
-    const session = await mockApi.watchSession(id);
+    const session = await api.watchSession(id);
     if (session) {
       setSelectedSession(session);
       // Set game mode for the session
@@ -85,9 +85,9 @@ const Watch = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to Menu
           </Button>
-          
+
           <h1 className="text-3xl font-game text-primary glow-primary">SPECTATE</h1>
-          
+
           <div className="w-24" />
         </div>
 
@@ -112,11 +112,10 @@ const Watch = () => {
                     <button
                       key={session.sessionId}
                       onClick={() => watchSession(session)}
-                      className={`w-full p-4 text-left border rounded-lg transition-colors ${
-                        selectedSession?.sessionId === session.sessionId
+                      className={`w-full p-4 text-left border rounded-lg transition-colors ${selectedSession?.sessionId === session.sessionId
                           ? 'border-primary bg-primary/10'
                           : 'border-border hover:border-primary/50'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold text-foreground">{session.username}</span>

@@ -1,23 +1,15 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { mockApi } from '@/services/mockApi';
-import { User } from '@/types/game';
+import { useAuth } from '@/contexts/AuthContext';
 import { Gamepad2, Trophy, Eye, LogOut, LogIn } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-
-  useEffect(() => {
-    const currentUser = mockApi.getCurrentUser();
-    setUser(currentUser);
-  }, []);
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    await mockApi.logout();
-    setUser(null);
+    await logout();
   };
 
   return (
@@ -30,7 +22,7 @@ const Index = () => {
           <p className="text-xl text-muted-foreground">
             Enter the neon grid and dominate the leaderboard
           </p>
-          
+
           {user ? (
             <div className="mt-6 flex items-center justify-center gap-3">
               <span className="text-accent font-semibold">Logged in as: {user.username}</span>

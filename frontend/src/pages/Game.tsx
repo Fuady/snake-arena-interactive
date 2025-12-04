@@ -5,7 +5,8 @@ import { GameHUD } from '@/components/GameHUD';
 import { Button } from '@/components/ui/button';
 import { SnakeGame, GRID_SIZE } from '@/lib/gameEngine';
 import { GameMode, Direction } from '@/types/game';
-import { mockApi } from '@/services/mockApi';
+import { api } from '@/services/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ArrowLeft, Pause, Play, RotateCcw } from 'lucide-react';
 
@@ -13,10 +14,25 @@ const Game = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const mode = (searchParams.get('mode') as GameMode) || 'walls';
-  
+  const { isAuthenticated } = useAuth();
+
   const [game] = useState(() => new SnakeGame(GRID_SIZE, mode));
   const [gameState, setGameState] = useState(() => game.createInitialState());
   const [speed, setSpeed] = useState(150);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Create session on mount if authenticated
+  useEffect(() => {
+    const createGameSession = async () => {
+      if (isAuthenticated) {
+        const result = await api.createSession(mode);
+        if (result.success && result.session) {
+          setSessionId(result.session.sessionId);
+        }
+      }
+    };
+    createGameSession();
+  }, [mode, isAuthenticated]);
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     if (gameState.isGameOver) return;
@@ -62,14 +78,24 @@ const Game = () => {
   useEffect(() => {
     if (gameState.isGameOver) {
       const submitGameScore = async () => {
-        const result = await mockApi.submitScore(gameState.score, mode);
-        if (result.success) {
-          toast.success(`Score ${gameState.score} submitted to leaderboard!`);
+        // End session if it exists
+        if (sessionId) {
+          await api.endSession(sessionId, gameState.score);
+        }
+
+        // Submit score if authenticated
+        if (isAuthenticated) {
+          const result = await api.submitScore(gameState.score, mode);
+          if (result.success) {
+            toast.success(`Score ${gameState.score} submitted to leaderboard!`);
+          }
+        } else {
+          toast.info('Login to save your score to the leaderboard!');
         }
       };
       submitGameScore();
     }
-  }, [gameState.isGameOver, gameState.score, mode]);
+  }, [gameState.isGameOver, gameState.score, mode, sessionId, isAuthenticated]);
 
   const handleRestart = () => {
     setGameState(game.createInitialState());
@@ -92,9 +118,9 @@ const Game = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to Menu
           </Button>
-          
+
           <h1 className="text-3xl font-game text-primary glow-primary">SNAKE ARCADE</h1>
-          
+
           <div className="flex gap-2">
             <Button
               variant="outline"

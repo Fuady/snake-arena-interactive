@@ -135,4 +135,14 @@ Add the output to `~/.ssh/config`
     gh cs stop -c expert-doodle-wr7wg9p5gqcgggw
 ```
 
-    
+## Links
+
+If you want to access the backend directly in your browser, use one of these URLs:
+
+- [API Documentation](http://localhost:3000/api-docs/)
+- [Health Check](http://localhost:3000/health)
+- [Leaderboard](http://localhost:3000/api/v1/leaderboard)
+
+For the frontend application, use:
+
+- [Frontend](http://localhost:8080)

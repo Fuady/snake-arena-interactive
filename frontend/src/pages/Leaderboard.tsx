@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockApi } from '@/services/mockApi';
+import { api } from '@/services/api';
 import { LeaderboardEntry, GameMode } from '@/types/game';
 import { ArrowLeft, Trophy, Medal, Award } from 'lucide-react';
 
@@ -22,8 +22,8 @@ const Leaderboard = () => {
     setIsLoading(true);
     try {
       const [walls, passThrough] = await Promise.all([
-        mockApi.getLeaderboard('walls'),
-        mockApi.getLeaderboard('pass-through'),
+        api.getLeaderboard('walls'),
+        api.getLeaderboard('pass-through'),
       ]);
       setWallsLeaderboard(walls);
       setPassThroughLeaderboard(passThrough);
@@ -54,7 +54,7 @@ const Leaderboard = () => {
             <div className="flex-shrink-0">
               {getRankIcon(index)}
             </div>
-            
+
             <div className="flex-1">
               <div className="font-semibold text-foreground">{entry.username}</div>
               <div className="text-sm text-muted-foreground">
@@ -87,9 +87,9 @@ const Leaderboard = () => {
             <ArrowLeft className="w-4 h-4" />
             Back to Menu
           </Button>
-          
+
           <h1 className="text-3xl font-game text-primary glow-primary">LEADERBOARD</h1>
-          
+
           <Button
             variant="outline"
             size="sm"

@@ -20,7 +20,7 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
 
 // Middleware
 app.use(cors({
-    origin: CORS_ORIGIN,
+    origin: [CORS_ORIGIN, 'http://localhost:8080', 'http://localhost:5173'],
     credentials: true,
 }));
 app.use(express.json());

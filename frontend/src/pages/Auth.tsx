@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockApi } from '@/services/mockApi';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { login, signup } = useAuth();
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [signupData, setSignupData] = useState({ username: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
@@ -19,9 +20,9 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const result = await mockApi.login(loginData.username, loginData.password);
+      const result = await login(loginData.username, loginData.password);
       if (result.success) {
-        toast.success(`Welcome back, ${result.user?.username}!`);
+        toast.success(`Welcome back, ${loginData.username}!`);
         navigate('/');
       } else {
         toast.error(result.error || 'Login failed');
@@ -33,7 +34,7 @@ const Auth = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (signupData.password !== signupData.confirmPassword) {
       toast.error('Passwords do not match');
       return;
@@ -42,9 +43,9 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      const result = await mockApi.signup(signupData.username, signupData.password);
+      const result = await signup(signupData.username, signupData.password);
       if (result.success) {
-        toast.success(`Account created! Welcome, ${result.user?.username}!`);
+        toast.success(`Account created! Welcome, ${signupData.username}!`);
         navigate('/');
       } else {
         toast.error(result.error || 'Signup failed');
