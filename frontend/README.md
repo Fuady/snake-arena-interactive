@@ -92,3 +92,21 @@ don't implement backend, so everything is mocked. But centralize all the calls t
 create the test file to test the apps
 ```
 
+**Connecting Antigravity to Codespaces**
+
+- Step 1: Install GitHub CLI
+    - Download from [GitHub CLI](https://github.com/cli/cli/releases)
+- Step 2: Install Antigravity
+    - Download from [Antigravity](https://antigravity.dev/)
+- Step 3: Connect Antigravity to GitHub
+    - Authenticate
+    ```sh
+    # Authenticate with GitHub using SSH
+    gh auth login
+# Select: SSH protocol and your existing SSH key for GitHub
+# Follow the remaining prompts
+
+    # authenticate for codespaces
+    gh auth refresh -h github.com -s codespace
+    ```
+- Step 4:
