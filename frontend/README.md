@@ -103,8 +103,9 @@ create the test file to test the apps
     ```sh
     # Authenticate with GitHub using SSH
     gh auth login
-# Select: SSH protocol and your existing SSH key for GitHub
-# Follow the remaining prompts
+
+    # Select: SSH protocol and your existing SSH key for GitHub
+    # Follow the remaining prompts
 
     # authenticate for codespaces
     gh auth refresh -h github.com -s codespace
@@ -117,11 +118,11 @@ create the test file to test the apps
 ```
 - Step 5: Connect via SSH
 ```sh
-gh codespace ssh -c expert-doodle-wr7wg9p5gqcgggw
+    gh codespace ssh -c expert-doodle-wr7wg9p5gqcgggw
 ```
 - Step 6: get the SSH config
 ```sh
-gh codespace ssh --config -c expert-doodle-wr7wg9p5gqcgggw
+    gh codespace ssh --config -c expert-doodle-wr7wg9p5gqcgggw
 ```
 Add the output to `~/.ssh/config`
 
@@ -131,7 +132,7 @@ Add the output to `~/.ssh/config`
 
 - Step 8: Stop Codespace When Done
 ```sh
-gh cs stop -c expert-doodle-wr7wg9p5gqcgggw
+    gh cs stop -c expert-doodle-wr7wg9p5gqcgggw
 ```
 
     
