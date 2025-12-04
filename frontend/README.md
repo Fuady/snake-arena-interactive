@@ -79,3 +79,5 @@ Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/c
 ```
 
 ## Check
+
+## Step by step guide create the frontend using lovable
