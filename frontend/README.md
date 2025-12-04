@@ -146,3 +146,116 @@ If you want to access the backend directly in your browser, use one of these URL
 For the frontend application, use:
 
 - [Frontend](http://localhost:8080)
+
+## Integrating Backend with Frontend
+
+```sh
+   Make frontend use backend. use OpenAPI
+
+   How can I run both frontend and backend at the same time? Let's use concurrently instead of our own script
+```
+
+## Database support
+Our backend uses a mock database. Let's use a real one now
+
+```sh
+   now for backend let's use postgres and sqlite database (via sqlalchemy)
+
+   let's also add some integration tests (using sqlite) to make sure things work put the integration test in a separate folder tests_integration
+```
+
+## Checking the database
+Here are the most useful methods:
+
+1. Prisma Studio (Recommended - Visual Interface)
+The easiest way to view and edit your database:
+
+```sh
+cd backend
+npm run prisma:studio
+```
+
+This will open a web interface (usually at `http://localhost:5555`) where you can:
+
+- View all tables and data
+- Add, edit, or delete records
+- Run queries
+- See relationships between tables
+
+2. SQLite Command Line
+Directly query the database using SQLite CLI:
+
+```sh
+cd backend
+sqlite3 dev.db
+```
+Then you can run SQL commands:
+
+```sql
+-- List all tables
+.tables
+
+-- View table schema
+.schema users
+
+-- Query data
+SELECT * FROM users;
+SELECT * FROM leaderboard_entries ORDER BY score DESC LIMIT 10;
+SELECT * FROM game_sessions WHERE isActive = 1;
+
+-- Exit
+.quit
+```
+
+3. VS Code SQLite Extension
+If you have the SQLite extension installed in VS Code:
+
+1. Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
+2. Type "SQLite: Open Database"
+3. Select `backend/dev.db`
+4. You can then explore tables in the sidebar
+
+
+4. Programmatically via Prisma
+You can also query the database programmatically:
+
+```sh
+cd backend
+npx tsx
+```
+
+Then in the REPL:
+
+```typescript
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient()
+
+// Get all users
+await prisma.user.findMany()
+
+// Get leaderboard
+await prisma.leaderboardEntry.findMany({ orderBy: { score: 'desc' }, take: 10 })
+
+// Get active sessions
+await prisma.gameSession.findMany({ where: { isActive: true } })
+```
+
+5. Check Database Files
+View which database files exist:
+
+```sh
+ls -lh backend/*.db
+```
+
+You should see:
+
+- `dev.db` - Development database
+- `test.db` - Test database (created during tests)
+
+Quick Database Status Check
+Here's a quick command to see what's in your database:
+
+```sh
+cd backend && sqlite3 dev.db "SELECT 'Users: ' || COUNT(*) FROM users UNION ALL SELECT 'Leaderboard Entries: ' || COUNT(*) FROM leaderboard_entries UNION ALL SELECT 'Active Sessions: ' || COUNT(*) FROM game_sessions WHERE isActive = 1;"
+```
+My recommendation: Use Prisma Studio (`npm run prisma:studio`) - it's the most user-friendly way to explore your database!
